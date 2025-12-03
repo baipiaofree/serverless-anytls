@@ -1,0 +1,15 @@
+{
+  "name": "anytls-nodejs",
+  "version": "1.0.0",
+  "description": "AnyTLS proxy server",
+  "main": "anytls-server.js",
+  "scripts": {
+    "start": "node anytls.js"
+  },
+  "keywords": ["anytls", "proxy", "tls", "yamux"],
+  "author": "eooce",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "node-forge": "^1.3.1"
+  }
+}
