@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
-// Configuration Variables - MODIFY THESE
-const PORT = 8443;
-const PASSWORD = '0a6568ff-ea3c-4271-9020-450560e10d63';
+// Configuration Variables
+const SERVER_PORT = process.env.SERVER_PORT || 8443; // only udp 
+const PASSWORD = process.env.PASSWORD || '0a6568ff-ea3c-4271-9020-450560e10d63';  // your uuid
 
-// ============================================================================
-// Dependencies
-// ============================================================================
+// sub  Configuration
+const PORT = process.env.PORT || 3000;            // http port
+const DOMAIN = process.env.DOMAIN || '127.0.0.1'; // domain or ip
+const SUB_PATH = process.env.SUB_PATH || 'sub';   // sub path
+
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const tls = require('tls');
 const net = require('net');
 const crypto = require('crypto');
@@ -16,7 +21,6 @@ const { EventEmitter } = require('events');
 // Configure DNS servers
 const DNS_SERVERS = ['8.8.4.4', '1.1.1.1'];
 dns.setServers(DNS_SERVERS);
-
 // ============================================================================
 // AnyTLS Session Protocol Constants
 // ============================================================================
@@ -32,8 +36,8 @@ const CMD_SYNACK = 7;
 const CMD_HEART_REQUEST = 8;
 const CMD_HEART_RESPONSE = 9;
 const CMD_SERVER_SETTINGS = 10;
-
 const HEADER_SIZE = 7;
+
 const MAX_FRAME_SIZE = 32768; // 32KB per frame for better flow control
 
 // ============================================================================
@@ -606,11 +610,47 @@ const server = tls.createServer(tlsOptions, (socket) => {
     });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`AnyTLS server listening on 0.0.0.0:${PORT}`);
-});
 
 server.on('error', (err) => {
-    console.error('Server error:', err);
+    console.error('AnyTLS Server error:', err);
     process.exit(1);
+});
+
+// HTTP server for serving public files and subscription info
+const httpServer = http.createServer((req, res) => {
+  if (req.url === '/' || req.url === '/index.html') {
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    fs.readFile(indexPath, (err, data) => {
+      if (err) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('hello world');
+      } else {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(data);
+      }
+    });
+  } else if (req.url === '/' + SUB_PATH) {
+    const subInfo = `anytls://${PASSWORD}@${DOMAIN}:${SERVER_PORT}?security=tls&sni=${DOMAIN}&fp=chrome&insecure=1&allowInsecure=1#Anytls`;
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end(subInfo);
+  } else {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not Found');
+  }
+});
+
+// Handle HTTP server errors
+httpServer.on('error', (err) => {
+    console.error('HTTP Server error:', err);
+    process.exit(1);
+});
+
+// Start the AnyTLS server
+server.listen(SERVER_PORT, '0.0.0.0', () => {
+    console.log(`AnyTLS server listening on 0.0.0.0:${SERVER_PORT}`);
+});
+
+// Start the HTTP server
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`HTTP server listening on 0.0.0.0:${PORT}`);
 });
