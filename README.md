@@ -40,3 +40,9 @@ V2rayN,Shadowrocket,Mihomo,sing-box
 ## 许可
 
 GPL-3.0
+
+## 特别说明
+* 此项目仅限个人使用，禁止用于商业行为(包括但不限于：youtube,bilibili,tiktok,facebook..等等)
+* 禁止新建项目将代码复制到自己仓库中用做商业行为
+* 请遵守当地法律法规,禁止滥用做公共代理行为
+* 如有违反以上条款者将追究法律责任
